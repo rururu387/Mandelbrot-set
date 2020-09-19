@@ -5,12 +5,12 @@
 #include <complex>
 #include <chrono>
 #include <windows.h>
-#define WIDTH 60
-#define HEIGHT 60
+#define WIDTH 50			
+#define HEIGHT 50
 #define SCALE 3.0
 
 bool isBelongMondelbrot(std::complex<long double> point, int estimation, 
-int maxNum)
+int maxNum) 
 {
 	std::complex<long double> functionVal(0, 0);
 	for (int i = 0; i < estimation; i++)
@@ -24,17 +24,31 @@ int maxNum)
 	return true;
 }
 
-std::complex<long double> offset(int i, int j)
+std::complex<long double> offset(int i, int j) //return position of point in coordinate system;
 {
 	return std::complex<long double>((i - (HEIGHT / 2)) * SCALE / HEIGHT, 
 										(j - WIDTH / 2) * SCALE / WIDTH);
 }
 
-void fillConsole(int estimation, int maxNum)
+std::string timePretty(std::chrono::duration<double> time)
 {
-	std::cout << std::setw(7) << std::flush;
+	if(std::chrono::duration_cast<std::	chrono::nanoseconds>(time).count()<1000)
+		return std::to_string(std::chrono::duration_cast<std::	chrono::nanoseconds>(time).count()) + 'n';
+		else if(std::chrono::duration_cast<std::chrono::microseconds>(time).count()<1000)
+			return std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(time).count()) + 'u';
+			else if (std::chrono::duration_cast<std::chrono::milliseconds>(time).count()<1000)
+				return std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(time).count()) + 'm';
+				else return std::to_string(std::chrono::duration_cast<std::chrono::seconds>(time).count()) + 's';}
+
+
+
+
+void fillConsole(int estimation, int maxNum) 
+{
+	//std::cout << std::setw(7) << std::flush;
 	for (int i = HEIGHT; i > 0; i--)
 	{
+		bool colorArray[WIDTH];
 		for(int j = 0; j < WIDTH; j++)
 		{
 			//std::cout << std::to_string(offset(j, i).real())[0] << std::to_string(offset(j, i).real())[1] << " " << std::to_string(offset(j, i).imag())[0] << std::to_string(offset(j, i).imag())[1] << ",\t";
@@ -43,6 +57,8 @@ void fillConsole(int estimation, int maxNum)
 			isIncluded = isBelongMondelbrot(offset(j, i), estimation, maxNum);
 			auto end = std::chrono::steady_clock::now();
     		std::chrono::duration<double> elapsed_seconds = end-start;
+			colorArray[j]=isIncluded;
+
 			if (isIncluded)
 			{
 				SetConsoleTextAttribute(GetStdHandle( STD_OUTPUT_HANDLE ), 0x2F);
@@ -50,11 +66,23 @@ void fillConsole(int estimation, int maxNum)
 			else
 			{
 				SetConsoleTextAttribute(GetStdHandle( STD_OUTPUT_HANDLE ), 0x1F);
-			}
-    		std::cout << std::setw(2) << std::chrono::duration_cast<std::
-						chrono::microseconds>(elapsed_seconds).count() << " " << std::flush;
+			}			
+    		std::cout << std::setw(5) << timePretty(elapsed_seconds) <<" " << std::flush;
+
 			/*SetConsoleTextAttribute(GetStdHandle( STD_OUTPUT_HANDLE ), 0x0F);
 			std::cout << " " << std::flush;*/
+		}
+		std::cout << "\n";
+		for(int j = 0; j < WIDTH; j++)
+		{if (colorArray[j])
+			{
+				SetConsoleTextAttribute(GetStdHandle( STD_OUTPUT_HANDLE ), 0x2F);
+			}
+			else
+			{
+				SetConsoleTextAttribute(GetStdHandle( STD_OUTPUT_HANDLE ), 0x1F);
+			}	
+			std::cout << std::setw(5) << "      " << std::flush;		
 		}
 		std::cout << "\n";
 	}
@@ -62,8 +90,8 @@ void fillConsole(int estimation, int maxNum)
 
 int main()
 {
-	double maxNum = 0;
-	int estimation = 0;
+	double maxNum = 0;//if vaulue> maxnum, value limits  to inf
+	int estimation = 0;//iteration cnt
 	std::cout << "Enter value that is close to inf: ";
 	std::cin >> maxNum;
 	std::cout << "Enter estimation order: ";
